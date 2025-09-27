@@ -98,8 +98,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (session?.user) {
             if (session.user.email_confirmed_at) {
               console.log('🔍 DEBUG: Auth state change - user confirmed, ensuring user profile exists');
-              // Ensure user profile exists before checking pro status
-              await AuthService.ensureUserProfileExists(session.user.id);
+              
+              // Try to ensure user profile exists before checking pro status
+              try {
+                await AuthService.ensureUserProfileExists(session.user.id);
+              } catch (error) {
+                console.error('Failed to ensure user profile exists during auth change:', error);
+                // Continue without throwing - app should still work
+              }
               
               // Check pro status and update user object
               const proStatus = await AuthService.checkProStatus();
@@ -107,13 +113,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 ...session.user,
                 isPro: proStatus.isPro,
                 selectedListType: proStatus.selectedListType,
-            // Try to ensure user profile exists before checking pro status
-            try {
-              await AuthService.ensureUserProfileExists(session.user.id);
-            } catch (error) {
-              console.error('Failed to ensure user profile exists during auth change:', error);
-              // Continue without throwing - app should still work
-            }
+                isProForLife: proStatus.isProForLife,
+                hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
               };
               setUser(enhancedUser);
               setIsUserDataLoaded(true);
