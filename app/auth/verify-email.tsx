@@ -49,6 +49,7 @@ export default function VerifyEmailScreen() {
       console.log('🔍 DEBUG: Email verified and user data loaded - navigating to main app');
       router.replace('/(tabs)');
     }
+  }, [loading, user?.email_confirmed_at, router]);
 
   // Countdown timer for resend button
   useEffect(() => {
