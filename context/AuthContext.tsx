@@ -55,21 +55,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setSession(initialSession);
       
       if (initialSession?.user?.id) {
-        console.log('🔍 DEBUG: Initial session found, ensuring user profile exists');
-        // Ensure user profile exists before checking pro status
-        await AuthService.ensureUserProfileExists(initialSession.user.id);
-        
-        // Check pro status and update user object
-        const proStatus = await AuthService.checkProStatus();
-        const enhancedUser = {
-          ...initialSession.user,
-          isPro: proStatus.isPro,
-          selectedListType: proStatus.selectedListType,
-          isProForLife: proStatus.isProForLife,
-          hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
-        };
-        setUser(enhancedUser);
-        setIsUserDataLoaded(true);
+        if (initialSession.user.email_confirmed_at) {
+          console.log('🔍 DEBUG: Initial session found with confirmed email, ensuring user profile exists');
+          // Ensure user profile exists before checking pro status
+          await AuthService.ensureUserProfileExists(initialSession.user.id);
+          
+          // Check pro status and update user object
+          const proStatus = await AuthService.checkProStatus();
+          const enhancedUser = {
+            ...initialSession.user,
+            isPro: proStatus.isPro,
+            selectedListType: proStatus.selectedListType,
+            isProForLife: proStatus.isProForLife,
+            hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+          };
+          setUser(enhancedUser);
+          setIsUserDataLoaded(true);
+        } else {
+          console.log('🔍 DEBUG: Initial session found but email not confirmed, setting basic user data');
+          // Email not confirmed yet, set basic user data without profile operations
+          setUser(initialSession.user);
+          setIsUserDataLoaded(true);
+        }
       } else {
         setUser(null);
         setIsUserDataLoaded(true);
@@ -84,21 +91,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('User email_confirmed_at:', session?.user?.email_confirmed_at);
           
           if (session?.user) {
-            console.log('🔍 DEBUG: Auth state change - ensuring user profile exists');
-            // Ensure user profile exists before checking pro status
-            await AuthService.ensureUserProfileExists(session.user.id);
-            
-            // Check pro status and update user object
-            const proStatus = await AuthService.checkProStatus();
-            const enhancedUser = {
-              ...session.user,
-              isPro: proStatus.isPro,
-              selectedListType: proStatus.selectedListType,
-              isProForLife: proStatus.isProForLife,
-              hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
-            };
-            setUser(enhancedUser);
-            setIsUserDataLoaded(true);
+            if (session.user.email_confirmed_at) {
+              console.log('🔍 DEBUG: Auth state change - user confirmed, ensuring user profile exists');
+              // Ensure user profile exists before checking pro status
+              await AuthService.ensureUserProfileExists(session.user.id);
+              
+              // Check pro status and update user object
+              const proStatus = await AuthService.checkProStatus();
+              const enhancedUser = {
+                ...session.user,
+                isPro: proStatus.isPro,
+                selectedListType: proStatus.selectedListType,
+                isProForLife: proStatus.isProForLife,
+                hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+              };
+              setUser(enhancedUser);
+              setIsUserDataLoaded(true);
+            } else {
+              console.log('🔍 DEBUG: Auth state change - user not confirmed, setting basic user data');
+              // Email not confirmed yet, set basic user data without profile operations
+              setUser(session.user);
+              setIsUserDataLoaded(true);
+            }
           } else {
             setUser(null);
             setIsUserDataLoaded(true);
@@ -159,7 +173,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const refreshedSession = await AuthService.getSession();
       
       if (refreshedSession?.user) {
-        console.log('🔍 DEBUG: Email verified - ensuring user profile exists');
+        console.log('🔍 DEBUG: Email verified and session refreshed - ensuring user profile exists');
         // Ensure user profile exists before checking pro status
         await AuthService.ensureUserProfileExists(refreshedSession.user.id);
         
