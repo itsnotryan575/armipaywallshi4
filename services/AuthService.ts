@@ -262,13 +262,6 @@ class AuthServiceClass {
     try {
       console.log('🔍 DEBUG: Ensuring user profile exists for userId:', userId);
       
-      // First, verify the user exists in auth.users to prevent foreign key violations
-      const { data: authUser, error: authError } = await this.supabase.auth.admin.getUserById(userId);
-      if (authError || !authUser.user) {
-        console.log('🔍 DEBUG: User not found in auth.users, cannot create profile yet');
-        throw new Error('User not found in authentication system');
-      }
-      
       // Check if a profile already exists for this user
       const { data: existingProfile, error: selectError } = await this.supabase
         .from('user_profiles')
@@ -278,7 +271,8 @@ class AuthServiceClass {
       
       if (selectError) {
         console.error('Error checking existing user profile:', selectError);
-        throw new Error(selectError.message);
+        // If we can't check for existing profile, assume it doesn't exist and try to create
+        console.log('🔍 DEBUG: Could not check existing profile, will attempt to create new one');
       }
       
       if (existingProfile) {
@@ -304,6 +298,12 @@ class AuthServiceClass {
       
       if (insertError) {
         console.error('Error creating user profile:', insertError);
+        // If profile creation fails due to foreign key constraint, it means the user
+        // record isn't ready yet. Return null and let the app continue.
+        if (insertError.code === '23503') {
+          console.log('🔍 DEBUG: User record not ready yet, will retry later');
+          return null;
+        }
         throw new Error(insertError.message);
       }
       
@@ -311,9 +311,8 @@ class AuthServiceClass {
       return newProfile;
     } catch (error) {
       console.error('Error ensuring user profile exists:', error);
-      // Don't throw error for profile creation issues during initial auth
-      // This allows the app to continue functioning even if profile creation fails
-      console.log('🔍 DEBUG: Continuing without user profile due to error');
+      // Return null instead of throwing to allow app to continue
+      console.log('🔍 DEBUG: Profile creation failed, continuing without profile');
       return null;
     }
   }
