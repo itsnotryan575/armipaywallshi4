@@ -146,10 +146,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
       setIsUserDataLoaded(true);
     }
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-      setLoading(false);
-    }
   };
 
   const signUp = async (email: string, password: string) => {
