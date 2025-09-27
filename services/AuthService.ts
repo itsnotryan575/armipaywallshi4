@@ -262,6 +262,13 @@ class AuthServiceClass {
     try {
       console.log('🔍 DEBUG: Ensuring user profile exists for userId:', userId);
       
+      // First, verify the user exists in auth.users to prevent foreign key violations
+      const { data: authUser, error: authError } = await this.supabase.auth.admin.getUserById(userId);
+      if (authError || !authUser.user) {
+        console.log('🔍 DEBUG: User not found in auth.users, cannot create profile yet');
+        throw new Error('User not found in authentication system');
+      }
+      
       // Check if a profile already exists for this user
       const { data: existingProfile, error: selectError } = await this.supabase
         .from('user_profiles')
@@ -304,7 +311,10 @@ class AuthServiceClass {
       return newProfile;
     } catch (error) {
       console.error('Error ensuring user profile exists:', error);
-      throw error;
+      // Don't throw error for profile creation issues during initial auth
+      // This allows the app to continue functioning even if profile creation fails
+      console.log('🔍 DEBUG: Continuing without user profile due to error');
+      return null;
     }
   }
 

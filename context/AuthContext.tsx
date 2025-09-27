@@ -57,8 +57,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (initialSession?.user?.id) {
         if (initialSession.user.email_confirmed_at) {
           console.log('🔍 DEBUG: Initial session found with confirmed email, ensuring user profile exists');
-          // Ensure user profile exists before checking pro status
-          await AuthService.ensureUserProfileExists(initialSession.user.id);
+          // Try to ensure user profile exists before checking pro status
+          try {
+            await AuthService.ensureUserProfileExists(initialSession.user.id);
+          } catch (error) {
+            console.error('Failed to ensure user profile exists during init:', error);
+            // Continue without throwing - app should still work
+          }
           
           // Check pro status and update user object
           const proStatus = await AuthService.checkProStatus();
@@ -102,8 +107,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 ...session.user,
                 isPro: proStatus.isPro,
                 selectedListType: proStatus.selectedListType,
-                isProForLife: proStatus.isProForLife,
-                hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+            // Try to ensure user profile exists before checking pro status
+            try {
+              await AuthService.ensureUserProfileExists(session.user.id);
+            } catch (error) {
+              console.error('Failed to ensure user profile exists during auth change:', error);
+              // Continue without throwing - app should still work
+            }
               };
               setUser(enhancedUser);
               setIsUserDataLoaded(true);
@@ -174,8 +184,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (refreshedSession?.user) {
         console.log('🔍 DEBUG: Email verified and session refreshed - ensuring user profile exists');
-        // Ensure user profile exists before checking pro status
-        await AuthService.ensureUserProfileExists(refreshedSession.user.id);
+        // Try to ensure user profile exists before checking pro status
+        try {
+          await AuthService.ensureUserProfileExists(refreshedSession.user.id);
+        } catch (error) {
+          console.error('Failed to ensure user profile exists during email verification:', error);
+          // Continue without throwing - app should still work
+        }
         
         const proStatus = await AuthService.checkProStatus();
         const enhancedUser = {
