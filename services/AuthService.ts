@@ -170,9 +170,6 @@ class AuthServiceClass {
     // Force refresh the session to get updated user data
     await this.supabase.auth.refreshSession();
     
-    // Give Supabase time to fully propagate the email_confirmed_at status
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
     // Set RevenueCat user ID after successful verification
     const session = await this.getSession();
     if (session?.user?.id) {

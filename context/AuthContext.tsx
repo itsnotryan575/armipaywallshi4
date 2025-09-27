@@ -98,13 +98,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (session?.user) {
             if (session.user.email_confirmed_at) {
               console.log('🔍 DEBUG: Auth state change - user confirmed, ensuring user profile exists');
-              
-              // Try to ensure user profile exists before checking pro status
+              // Try to ensure user profile exists before checking pro status.
+              // This is crucial for isPro and selectedListType to be available.
+              // This is crucial for isPro and selectedListType to be available.
               try {
                 await AuthService.ensureUserProfileExists(session.user.id);
               } catch (error) {
-                console.error('Failed to ensure user profile exists during auth change:', error);
-                // Continue without throwing - app should still work
               }
               
               // Check pro status and update user object
@@ -118,11 +117,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
               };
               setUser(enhancedUser);
               setIsUserDataLoaded(true);
+              console.log('🔍 DEBUG: AuthContext - Auth state change confirmed, user data loaded.');
+              console.log('🔍 DEBUG: AuthContext - Initial session confirmed, user data loaded.');
             } else {
               console.log('🔍 DEBUG: Auth state change - user not confirmed, setting basic user data');
               // Email not confirmed yet, set basic user data without profile operations
-              setUser(session.user);
-              setIsUserDataLoaded(true);
             }
           } else {
             setUser(null);
@@ -188,12 +187,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Try to ensure user profile exists before checking pro status
         try {
           await AuthService.ensureUserProfileExists(refreshedSession.user.id);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to ensure user profile exists during email verification:', error);
-          // Continue without throwing - app should still work
+          // If profile creation fails, we still want to set the user and isUserDataLoaded
+          // The app can handle missing profile data gracefully.
         }
         
-        const proStatus = await AuthService.checkProStatus();
         const enhancedUser = {
           ...refreshedSession.user,
           isPro: proStatus.isPro,
@@ -202,10 +201,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
         };
         setUser(enhancedUser);
+        console.log('🔍 DEBUG: AuthContext - Email verified, user data loaded.');
         setIsUserDataLoaded(true);
       } else {
         setUser(null);
-        setIsUserDataLoaded(true);
       }
       
       setSession(refreshedSession);

@@ -19,7 +19,7 @@ export default function Index() {
   console.log('Index - User:', user?.email, 'Confirmed:', user?.email_confirmed_at, 'Loading:', loading);
 
   const theme = {
-    text: '#f0f0f0',
+    text: isDark ? '#f0f0f0' : '#000000',
     background: isDark ? '#0B0909' : '#003C24',
     primary: isDark ? '#8C8C8C' : '#f0f0f0',
   };
@@ -27,10 +27,10 @@ export default function Index() {
   // Determine which modals to show based on user state
   useEffect(() => {
     if (!loading && user?.email_confirmed_at && isUserDataLoaded) {
-      console.log('🔍 DEBUG: User is authenticated, confirmed, and data loaded - determining modal flow');
+      console.log('🔍 DEBUG: Index - User is authenticated, confirmed, and data loaded - determining modal flow');
       determineAndShowInitialModals();
     } else {
-      // User is not confirmed or still loading, clear modal states
+      // User is not confirmed or still loading, clear modal states and keep loading
       console.log('🔍 DEBUG: Clearing modal states - loading:', loading, 'confirmed:', !!user?.email_confirmed_at, 'dataLoaded:', isUserDataLoaded);
       setShowDevNoteModal(false);
       setShowListSelectionModal(false);
@@ -41,7 +41,7 @@ export default function Index() {
   const determineAndShowInitialModals = async () => {
     try {
       setIsInitialModalCheckLoading(true);
-      console.log('🔍 DEBUG: Determining which modals to show with complete user data...');
+      console.log('🔍 DEBUG: Index - Determining which modals to show with complete user data...');
       
       // Check AsyncStorage flags
       const hasMadeInitialListSelection = await AsyncStorage.getItem('has_made_initial_list_selection');
@@ -51,21 +51,21 @@ export default function Index() {
         hasMadeInitialListSelection,
         dontShowDevNote,
         userIsPro: user?.isPro,
-        userSelectedListType: user?.selectedListType,
-        isUserDataLoaded
+        userSelectedListType: user?.selectedListType
       });
       
       // Determine if list selection modal should show
       // Show for free users who haven't selected a list AND haven't made initial selection
       const shouldShowListSelection = !user?.isPro && 
                                      !user?.selectedListType && 
-                                     hasMadeInitialListSelection !== 'true';
+                                     hasMadeInitialListSelection !== 'true' &&
+                                     user?.email_confirmed_at; // Only show if email is confirmed
       
       // Determine if dev note modal should show
       // Show if user hasn't opted out AND hasn't made initial list selection (or is pro)
-      const shouldShowDevNote = dontShowDevNote !== 'true';
+      const shouldShowDevNote = dontShowDevNote !== 'true' && user?.email_confirmed_at; // Only show if email is confirmed
       
-      console.log('🔍 DEBUG: Modal decisions:', {
+      console.log('🔍 DEBUG: Index - Modal decisions:', {
         shouldShowListSelection,
         shouldShowDevNote
       });
@@ -81,7 +81,7 @@ export default function Index() {
         setShowDevNoteModal(true);
         setShowListSelectionModal(false);
       } else {
-        // No modals needed
+        // No modals needed, or email not confirmed yet
         console.log('🔍 DEBUG: No modals needed, proceeding to main app');
         setShowDevNoteModal(false);
         setShowListSelectionModal(false);
@@ -97,7 +97,7 @@ export default function Index() {
   };
 
   const handleListSelectionClose = async () => {
-    console.log('🔍 DEBUG: List selection modal closed');
+    console.log('🔍 DEBUG: Index - List selection modal closed');
     try {
       // Mark that user has made their initial list selection
       await AsyncStorage.setItem('has_made_initial_list_selection', 'true');
@@ -105,11 +105,11 @@ export default function Index() {
       
       // After list selection, check if dev note should be shown
       const dontShowDevNote = await AsyncStorage.getItem('do_not_show_dev_note_again');
-      if (dontShowDevNote !== 'true') {
-        console.log('🔍 DEBUG: Showing dev note after list selection');
+      if (dontShowDevNote !== 'true' && user?.email_confirmed_at) { // Only show if email is confirmed
+        console.log('🔍 DEBUG: Index - Showing dev note after list selection');
         setShowDevNoteModal(true);
       } else {
-        console.log('🔍 DEBUG: User opted out of dev note, proceeding to main app');
+        console.log('🔍 DEBUG: Index - User opted out of dev note or email not confirmed, proceeding to main app');
       }
     } catch (error) {
       console.error('Error handling list selection close:', error);
@@ -117,14 +117,14 @@ export default function Index() {
   };
 
   const handleDevNoteClose = async (dontShowAgain: boolean) => {
-    console.log('🔍 DEBUG: Dev note closing, dontShowAgain:', dontShowAgain);
+    console.log('🔍 DEBUG: Index - Dev note closing, dontShowAgain:', dontShowAgain);
     try {
       if (dontShowAgain) {
-        console.log('🔍 DEBUG: Setting do_not_show_dev_note_again to true');
+        console.log('🔍 DEBUG: Index - Setting do_not_show_dev_note_again to true');
         await AsyncStorage.setItem('do_not_show_dev_note_again', 'true');
       }
       setShowDevNoteModal(false);
-      console.log('🔍 DEBUG: Dev note closed');
+      console.log('🔍 DEBUG: Index - Dev note closed');
     } catch (error) {
       console.error('Error saving dev note preference:', error);
       setShowDevNoteModal(false);
@@ -143,13 +143,13 @@ export default function Index() {
   }
 
   // Handle unauthenticated users
-  if (!user) {
+  if (!user && !loading) { // Only redirect if not loading and no user
     return <Redirect href="/auth/sign-in" />;
   }
 
   // Handle unverified users
   console.log('🔍 DEBUG: Index routing check - user.email_confirmed_at:', user.email_confirmed_at);
-  if (!user.email_confirmed_at) {
+  if (user && !user.email_confirmed_at) { // Only redirect if user exists but is unconfirmed
     console.log('🔍 DEBUG: User email not confirmed, redirecting to verify-email');
     return <Redirect href="/auth/verify-email" />;
   }

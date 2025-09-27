@@ -45,7 +45,7 @@ export default function VerifyEmailScreen() {
       emailConfirmed: !!user?.email_confirmed_at,
       emailConfirmedAt: user?.email_confirmed_at
     });
-    
+
     if (!loading && user?.email_confirmed_at) {
       console.log('🔍 DEBUG: Email verified and user data loaded - navigating to main app');
       // Small delay to ensure UI state is stable before navigation
