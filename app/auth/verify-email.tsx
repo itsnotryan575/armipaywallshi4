@@ -53,6 +53,7 @@ export default function VerifyEmailScreen() {
         router.replace('/(tabs)');
       }, 500);
     }
+  }, [loading, user?.email_confirmed_at, router]);
 
   // Countdown timer for resend button
   useEffect(() => {
