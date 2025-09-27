@@ -79,9 +79,8 @@ export default function Index() {
       
       // Determine if list selection modal should show
       // Show for free users who haven't selected a list AND haven't made initial selection
-      const shouldShowListSelection = !user?.isPro && 
-                                     !user?.selectedListType && 
-                                     hasMadeInitialListSelection !== 'true' &&
+      const shouldShowListSelection = !user?.isPro &&
+                                     !user?.selectedListType &&
                                      user?.email_confirmed_at; // Only show if email is confirmed
       
       // Determine if dev note modal should show
@@ -133,7 +132,7 @@ export default function Index() {
     console.log('🔍 DEBUG: Index - List selection modal closed');
     try {
       // Mark that user has made their initial list selection
-      await AsyncStorage.setItem('has_made_initial_list_selection', 'true');
+      // This flag is no longer needed as we rely on user?.selectedListType
       setShowListSelectionModal(false);
       
       // After list selection, check if dev note should be shown
