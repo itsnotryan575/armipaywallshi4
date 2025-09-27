@@ -74,6 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             selectedListType: proStatus.selectedListType,
             isProForLife: proStatus.isProForLife,
             hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+          }
           setUser(enhancedUser);
         } else {
           console.log('🔍 DEBUG: Initial session found but email not confirmed, setting basic user data');
