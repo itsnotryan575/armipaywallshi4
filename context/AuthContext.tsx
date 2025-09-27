@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   session: any;
   loading: boolean;
+  isUserDataLoaded: boolean;
   signUp: (email: string, password: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   sendEmailOtp: (email: string) => Promise<any>;
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isUserDataLoaded, setIsUserDataLoaded] = useState(false);
 
   useEffect(() => {
     initializeAuth();
@@ -51,7 +53,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Get initial session
       const initialSession = await AuthService.getSession();
       setSession(initialSession);
-      setUser(initialSession?.user || null);
+      
+      if (initialSession?.user?.id) {
+        console.log('🔍 DEBUG: Initial session found, ensuring user profile exists');
+        // Ensure user profile exists before checking pro status
+        await AuthService.ensureUserProfileExists(initialSession.user.id);
+        
+        // Check pro status and update user object
+        const proStatus = await AuthService.checkProStatus();
+        const enhancedUser = {
+          ...initialSession.user,
+          isPro: proStatus.isPro,
+          selectedListType: proStatus.selectedListType,
+          isProForLife: proStatus.isProForLife,
+          hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+        };
+        setUser(enhancedUser);
+        setIsUserDataLoaded(true);
+      } else {
+        setUser(null);
+        setIsUserDataLoaded(true);
+      }
+      
+      setLoading(false);
 
       // Listen for auth changes
       const { data: { subscription } } = AuthService.onAuthStateChange(
@@ -60,6 +84,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('User email_confirmed_at:', session?.user?.email_confirmed_at);
           
           if (session?.user) {
+            console.log('🔍 DEBUG: Auth state change - ensuring user profile exists');
+            // Ensure user profile exists before checking pro status
+            await AuthService.ensureUserProfileExists(session.user.id);
+            
             // Check pro status and update user object
             const proStatus = await AuthService.checkProStatus();
             const enhancedUser = {
@@ -70,8 +98,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
               hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
             };
             setUser(enhancedUser);
+            setIsUserDataLoaded(true);
           } else {
             setUser(null);
+            setIsUserDataLoaded(true);
           }
           
           setSession(session);
@@ -129,6 +159,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const refreshedSession = await AuthService.getSession();
       
       if (refreshedSession?.user) {
+        console.log('🔍 DEBUG: Email verified - ensuring user profile exists');
+        // Ensure user profile exists before checking pro status
+        await AuthService.ensureUserProfileExists(refreshedSession.user.id);
+        
         const proStatus = await AuthService.checkProStatus();
         const enhancedUser = {
           ...refreshedSession.user,
@@ -138,8 +172,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
         };
         setUser(enhancedUser);
+        setIsUserDataLoaded(true);
       } else {
         setUser(null);
+        setIsUserDataLoaded(true);
       }
       
       setSession(refreshedSession);
@@ -224,6 +260,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user,
       session,
       loading,
+      isUserDataLoaded,
       signUp,
       signIn,
       sendEmailOtp,

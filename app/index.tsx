@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { InitialListSelectionModal } from '@/components/InitialListSelectionModal';
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, loading, isUserDataLoaded } = useAuth();
   const { isDark } = useTheme();
   
   // Modal states
@@ -26,21 +26,22 @@ export default function Index() {
 
   // Determine which modals to show based on user state
   useEffect(() => {
-    if (!loading && user?.email_confirmed_at) {
-      console.log('🔍 DEBUG: User is authenticated and confirmed, determining modal flow');
+    if (!loading && user?.email_confirmed_at && isUserDataLoaded) {
+      console.log('🔍 DEBUG: User is authenticated, confirmed, and data loaded - determining modal flow');
       determineAndShowInitialModals();
     } else {
       // User is not confirmed or still loading, clear modal states
+      console.log('🔍 DEBUG: Clearing modal states - loading:', loading, 'confirmed:', !!user?.email_confirmed_at, 'dataLoaded:', isUserDataLoaded);
       setShowDevNoteModal(false);
       setShowListSelectionModal(false);
       setIsInitialModalCheckLoading(false);
     }
-  }, [loading, user?.email_confirmed_at, user?.isPro, user?.selectedListType]);
+  }, [loading, user?.email_confirmed_at, isUserDataLoaded, user?.isPro, user?.selectedListType]);
 
   const determineAndShowInitialModals = async () => {
     try {
       setIsInitialModalCheckLoading(true);
-      console.log('🔍 DEBUG: Determining which modals to show...');
+      console.log('🔍 DEBUG: Determining which modals to show with complete user data...');
       
       // Check AsyncStorage flags
       const hasMadeInitialListSelection = await AsyncStorage.getItem('has_made_initial_list_selection');
@@ -50,7 +51,8 @@ export default function Index() {
         hasMadeInitialListSelection,
         dontShowDevNote,
         userIsPro: user?.isPro,
-        userSelectedListType: user?.selectedListType
+        userSelectedListType: user?.selectedListType,
+        isUserDataLoaded
       });
       
       // Determine if list selection modal should show
@@ -130,7 +132,7 @@ export default function Index() {
   };
 
   // Show loading while checking modal states
-  if (loading || isInitialModalCheckLoading) {
+  if (loading || !isUserDataLoaded || isInitialModalCheckLoading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Text style={[styles.loadingText, { color: theme.text }]}>

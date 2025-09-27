@@ -256,6 +256,58 @@ class AuthServiceClass {
     return this.supabase.auth.onAuthStateChange(callback);
   }
 
+  async ensureUserProfileExists(userId: string) {
+    await this.ensureInitialized();
+    
+    try {
+      console.log('🔍 DEBUG: Ensuring user profile exists for userId:', userId);
+      
+      // Check if a profile already exists for this user
+      const { data: existingProfile, error: selectError } = await this.supabase
+        .from('user_profiles')
+        .select('id, is_pro_for_life, selected_list_type')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (selectError) {
+        console.error('Error checking existing user profile:', selectError);
+        throw new Error(selectError.message);
+      }
+      
+      if (existingProfile) {
+        console.log('🔍 DEBUG: User profile already exists:', existingProfile);
+        return existingProfile;
+      }
+      
+      // Create default user profile if it doesn't exist
+      console.log('🔍 DEBUG: Creating default user profile for userId:', userId);
+      const now = new Date().toISOString();
+      
+      const { data: newProfile, error: insertError } = await this.supabase
+        .from('user_profiles')
+        .insert({
+          user_id: userId,
+          is_pro_for_life: false,
+          selected_list_type: null,
+          created_at: now,
+          updated_at: now,
+        })
+        .select('id, is_pro_for_life, selected_list_type')
+        .single();
+      
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+        throw new Error(insertError.message);
+      }
+      
+      console.log('🔍 DEBUG: Successfully created user profile:', newProfile);
+      return newProfile;
+    } catch (error) {
+      console.error('Error ensuring user profile exists:', error);
+      throw error;
+    }
+  }
+
   async checkProStatus(): Promise<ProStatus> {
     await this.ensureInitialized();
     
