@@ -74,13 +74,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             selectedListType: proStatus.selectedListType,
             isProForLife: proStatus.isProForLife,
             hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
-          }
           };
           setUser(enhancedUser);
         } else {
           console.log('🔍 DEBUG: Initial session found but email not confirmed, setting basic user data');
           // Email not confirmed yet, set basic user data without profile operations
-          setUser(session.user);
           setUser(initialSession.user);
           setIsUserDataLoaded(true);
         }
@@ -89,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       // Set isUserDataLoaded based on whether we have a confirmed user or no user at all
-      setIsUserDataLoaded(!session?.user || !!session.user.email_confirmed_at);
+      setIsUserDataLoaded(!initialSession?.user || !!initialSession.user.email_confirmed_at);
       
       setLoading(false);
 
@@ -108,6 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               try {
                 await AuthService.ensureUserProfileExists(session.user.id);
               } catch (error) {
+                console.error('Failed to ensure user profile exists during auth state change:', error);
+                // Continue without throwing - app should still work
               }
               
               // Check pro status and update user object
@@ -126,6 +126,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             } else {
               console.log('🔍 DEBUG: Auth state change - user not confirmed, setting basic user data');
               // Email not confirmed yet, set basic user data without profile operations
+              setUser(session.user);
             }
           } else {
             setUser(null);
@@ -197,6 +198,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // The app can handle missing profile data gracefully.
         }
         
+        // Check pro status and update user object
+        const proStatus = await AuthService.checkProStatus();
         const enhancedUser = {
           ...refreshedSession.user,
           isPro: proStatus.isPro,
