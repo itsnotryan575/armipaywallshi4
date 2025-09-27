@@ -52,6 +52,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Get initial session
       const initialSession = await AuthService.getSession();
+      console.log('🔍 DEBUG: AuthContext - Initial session retrieved:', {
+        hasSession: !!initialSession,
+        hasUser: !!initialSession?.user,
+        userEmail: initialSession?.user?.email || 'none',
+        emailConfirmed: !!initialSession?.user?.email_confirmed_at,
+        emailConfirmedAt: initialSession?.user?.email_confirmed_at || 'none'
+      });
       setSession(initialSession);
       
       if (initialSession?.user?.id) {
@@ -68,6 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           
           // Check pro status and update user object
           const proStatus = await AuthService.checkProStatus();
+          console.log('🔍 DEBUG: AuthContext - Pro status check result:', proStatus);
           const enhancedUser = {
             ...initialSession.user,
             isPro: proStatus.isPro,
@@ -76,6 +84,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
           };
           setUser(enhancedUser);
+          console.log('🔍 DEBUG: AuthContext - Enhanced user set:', {
+            email: enhancedUser.email,
+            isPro: enhancedUser.isPro,
+            selectedListType: enhancedUser.selectedListType,
+            emailConfirmed: !!enhancedUser.email_confirmed_at
+          });
         } else {
           console.log('🔍 DEBUG: Initial session found but email not confirmed, setting basic user data');
           // Email not confirmed yet, set basic user data without profile operations
@@ -83,12 +97,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsUserDataLoaded(true);
         }
       } else {
+        console.log('🔍 DEBUG: AuthContext - No initial session found, setting user to null');
         setUser(null);
       }
       
       // Set isUserDataLoaded based on whether we have a confirmed user or no user at all
       setIsUserDataLoaded(!initialSession?.user || !!initialSession.user.email_confirmed_at);
       
+      console.log('🔍 DEBUG: AuthContext - Initial auth setup complete:', {
+        hasUser: !!user,
+        loading: false,
+        isUserDataLoaded: !initialSession?.user || !!initialSession.user.email_confirmed_at
+      });
       setLoading(false);
 
       // Listen for auth changes
@@ -112,6 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               
               // Check pro status and update user object
               const proStatus = await AuthService.checkProStatus();
+              console.log('🔍 DEBUG: AuthContext - Auth state change pro status:', proStatus);
               const enhancedUser = {
                 ...session.user,
                 isPro: proStatus.isPro,
@@ -121,6 +142,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
               };
               setUser(enhancedUser);
               setIsUserDataLoaded(true);
+              console.log('🔍 DEBUG: AuthContext - Auth state change user set:', {
+                email: enhancedUser.email,
+                isPro: enhancedUser.isPro,
+                selectedListType: enhancedUser.selectedListType,
+                emailConfirmed: !!enhancedUser.email_confirmed_at
+              });
               console.log('🔍 DEBUG: AuthContext - Auth state change confirmed, user data loaded.');
               console.log('🔍 DEBUG: AuthContext - Initial session confirmed, user data loaded.');
             } else {
@@ -129,11 +156,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setUser(session.user);
             }
           } else {
+            console.log('🔍 DEBUG: AuthContext - Auth state change no user, setting null');
             setUser(null);
             setIsUserDataLoaded(true);
           }
           
           setSession(session);
+          console.log('🔍 DEBUG: AuthContext - Auth state change complete:', {
+            event,
+            hasUser: !!session?.user,
+            loading: false,
+            isUserDataLoaded: true
+          });
           setLoading(false);
         }
       );

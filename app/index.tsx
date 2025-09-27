@@ -11,6 +11,16 @@ export default function Index() {
   const { user, loading, isUserDataLoaded } = useAuth();
   const { isDark } = useTheme();
   
+  console.log('🔍 DEBUG: Index render - Current state:', {
+    hasUser: !!user,
+    userEmail: user?.email || 'none',
+    emailConfirmed: !!user?.email_confirmed_at,
+    isPro: user?.isPro,
+    selectedListType: user?.selectedListType,
+    loading,
+    isUserDataLoaded
+  });
+  
   // Modal states
   const [showDevNoteModal, setShowDevNoteModal] = useState(false);
   const [showListSelectionModal, setShowListSelectionModal] = useState(false);
@@ -26,6 +36,13 @@ export default function Index() {
 
   // Determine which modals to show based on user state
   useEffect(() => {
+    console.log('🔍 DEBUG: Index useEffect triggered with:', {
+      loading,
+      emailConfirmed: !!user?.email_confirmed_at,
+      isUserDataLoaded,
+      userEmail: user?.email || 'none'
+    });
+    
     if (!loading && user?.email_confirmed_at && isUserDataLoaded) {
       console.log('🔍 DEBUG: Index - User is authenticated, confirmed, and data loaded - determining modal flow');
       determineAndShowInitialModals();
@@ -39,6 +56,7 @@ export default function Index() {
   }, [loading, user?.email_confirmed_at, isUserDataLoaded, user?.isPro, user?.selectedListType]);
 
   const determineAndShowInitialModals = async () => {
+    console.log('🔍 DEBUG: Index - determineAndShowInitialModals called');
     try {
       setIsInitialModalCheckLoading(true);
       console.log('🔍 DEBUG: Index - Determining which modals to show with complete user data...');
@@ -46,6 +64,11 @@ export default function Index() {
       // Check AsyncStorage flags
       const hasMadeInitialListSelection = await AsyncStorage.getItem('has_made_initial_list_selection');
       const dontShowDevNote = await AsyncStorage.getItem('do_not_show_dev_note_again');
+      
+      console.log('🔍 DEBUG: Index - AsyncStorage values:', {
+        hasMadeInitialListSelection,
+        dontShowDevNote
+      });
       
       console.log('🔍 DEBUG: AsyncStorage flags:', {
         hasMadeInitialListSelection,
@@ -64,6 +87,16 @@ export default function Index() {
       // Determine if dev note modal should show
       // Show if user hasn't opted out AND hasn't made initial list selection (or is pro)
       const shouldShowDevNote = dontShowDevNote !== 'true' && user?.email_confirmed_at; // Only show if email is confirmed
+      
+      console.log('🔍 DEBUG: Index - Modal decision calculations:', {
+        shouldShowListSelection,
+        shouldShowDevNote,
+        userIsPro: user?.isPro,
+        userSelectedListType: user?.selectedListType,
+        hasMadeInitialListSelection,
+        dontShowDevNote,
+        emailConfirmed: !!user?.email_confirmed_at
+      });
       
       console.log('🔍 DEBUG: Index - Modal decisions:', {
         shouldShowListSelection,
@@ -133,6 +166,11 @@ export default function Index() {
 
   // Show loading while checking modal states
   if (loading || !isUserDataLoaded || isInitialModalCheckLoading) {
+    console.log('🔍 DEBUG: Index - Showing loading screen:', {
+      loading,
+      isUserDataLoaded,
+      isInitialModalCheckLoading
+    });
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Text style={[styles.loadingText, { color: theme.text }]}>
@@ -145,6 +183,10 @@ export default function Index() {
   // Handle unauthenticated users
   if (!user && !loading) { // Only redirect if not loading and no user
     console.log('🔍 DEBUG: Index - Redirecting to sign-in (no user, not loading)');
+    console.log('🔍 DEBUG: Index - Unauthenticated redirect conditions met:', {
+      hasUser: !!user,
+      loading
+    });
     return <Redirect href="/auth/sign-in" />;
   }
 
@@ -153,6 +195,10 @@ export default function Index() {
   if (user && !user.email_confirmed_at) { // Only redirect if user exists but is unconfirmed
     console.log('🔍 DEBUG: User email not confirmed, redirecting to verify-email');
     console.log('🔍 DEBUG: Index - Redirecting to verify-email (user exists but unconfirmed)');
+    console.log('🔍 DEBUG: Index - Unverified redirect conditions met:', {
+      hasUser: !!user,
+      emailConfirmed: !!user?.email_confirmed_at
+    });
     return <Redirect href="/auth/verify-email" />;
   }
 
@@ -185,6 +231,14 @@ export default function Index() {
 
   // All modals handled, redirect to main app
   console.log('🔍 DEBUG: All modals handled, redirecting to main app');
+  console.log('🔍 DEBUG: Index - Final redirect to main app with state:', {
+    hasUser: !!user,
+    emailConfirmed: !!user?.email_confirmed_at,
+    isPro: user?.isPro,
+    selectedListType: user?.selectedListType,
+    showListSelectionModal,
+    showDevNoteModal
+  });
   return <Redirect href="/(tabs)" />;
 }
 
