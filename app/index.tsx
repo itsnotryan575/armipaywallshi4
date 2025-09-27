@@ -148,7 +148,9 @@ export default function Index() {
   }
 
   // Handle unverified users
+  console.log('🔍 DEBUG: Index routing check - user.email_confirmed_at:', user.email_confirmed_at);
   if (!user.email_confirmed_at) {
+    console.log('🔍 DEBUG: User email not confirmed, redirecting to verify-email');
     return <Redirect href="/auth/verify-email" />;
   }
 

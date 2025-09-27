@@ -18,7 +18,7 @@ import { useTheme } from '@/context/ThemeContext';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  const { user, sendEmailOtp, verifyEmailOtp, signOut, loading } = useAuth();
+  const { user, sendEmailOtp, verifyEmailOtp, signOut, loading, isUserDataLoaded } = useAuth();
   const { isDark } = useTheme();
   
   const [otpCode, setOtpCode] = useState('');
@@ -35,6 +35,25 @@ export default function VerifyEmailScreen() {
     border: isDark ? '#333333' : '#012d1c',
     isDark,
   };
+
+  // Navigate away when email is confirmed and all user data is loaded
+  useEffect(() => {
+    console.log('🔍 DEBUG: VerifyEmailScreen - Auth state check:', {
+      loading,
+      isUserDataLoaded,
+      userEmail: user?.email,
+      emailConfirmed: !!user?.email_confirmed_at,
+      emailConfirmedAt: user?.email_confirmed_at
+    });
+    
+    if (!loading && isUserDataLoaded && user?.email_confirmed_at) {
+      console.log('🔍 DEBUG: Email verified and user data loaded - navigating to main app');
+      // Small delay to ensure UI state is stable before navigation
+      setTimeout(() => {
+        router.replace('/');
+      }, 500);
+    }
+  }, [loading, isUserDataLoaded, user?.email_confirmed_at, router]);
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -65,8 +84,12 @@ export default function VerifyEmailScreen() {
     try {
       await verifyEmailOtp(user.email, otpCode.trim());
       
-      // Navigate immediately after successful verification
-      router.replace('/');
+      // Show success message - navigation will happen automatically via useEffect
+      Alert.alert(
+        'Email Verified!',
+        'Your email has been successfully verified. Welcome to ARMi!',
+        [{ text: 'Continue' }]
+      );
     } catch (error) {
       console.error('Verify OTP error:', error);
       Alert.alert('Verification Failed', error.message || 'Invalid verification code. Please try again.');
