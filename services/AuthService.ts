@@ -167,9 +167,6 @@ class AuthServiceClass {
       throw new Error(error.message);
     }
 
-    // Force refresh the session to get updated user data
-    await this.supabase.auth.refreshSession();
-    
     // Set RevenueCat user ID after successful verification
     const session = await this.getSession();
     if (session?.user?.id) {

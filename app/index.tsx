@@ -144,6 +144,7 @@ export default function Index() {
 
   // Handle unauthenticated users
   if (!user && !loading) { // Only redirect if not loading and no user
+    console.log('🔍 DEBUG: Index - Redirecting to sign-in (no user, not loading)');
     return <Redirect href="/auth/sign-in" />;
   }
 
@@ -151,6 +152,7 @@ export default function Index() {
   console.log('🔍 DEBUG: Index routing check - user.email_confirmed_at:', user.email_confirmed_at);
   if (user && !user.email_confirmed_at) { // Only redirect if user exists but is unconfirmed
     console.log('🔍 DEBUG: User email not confirmed, redirecting to verify-email');
+    console.log('🔍 DEBUG: Index - Redirecting to verify-email (user exists but unconfirmed)');
     return <Redirect href="/auth/verify-email" />;
   }
 

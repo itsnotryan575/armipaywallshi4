@@ -40,7 +40,6 @@ export default function VerifyEmailScreen() {
   useEffect(() => {
     console.log('🔍 DEBUG: VerifyEmailScreen - Auth state check:', {
       loading,
-      isUserDataLoaded,
       userEmail: user?.email,
       emailConfirmed: !!user?.email_confirmed_at,
       emailConfirmedAt: user?.email_confirmed_at
@@ -48,12 +47,8 @@ export default function VerifyEmailScreen() {
 
     if (!loading && user?.email_confirmed_at) {
       console.log('🔍 DEBUG: Email verified and user data loaded - navigating to main app');
-      // Small delay to ensure UI state is stable before navigation
-      setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 500);
+      router.replace('/(tabs)');
     }
-  }, [loading, user?.email_confirmed_at, router]);
 
   // Countdown timer for resend button
   useEffect(() => {

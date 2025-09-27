@@ -57,10 +57,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (initialSession?.user?.id) {
         if (initialSession.user.email_confirmed_at) {
           console.log('🔍 DEBUG: Initial session found with confirmed email, ensuring user profile exists');
-          // Try to ensure user profile exists before checking pro status
           try {
             await AuthService.ensureUserProfileExists(initialSession.user.id);
           } catch (error) {
+            console.error('Failed to ensure user profile exists during auth state change:', error);
+            // Continue without throwing - app should still work
             console.error('Failed to ensure user profile exists during init:', error);
             // Continue without throwing - app should still work
           }
@@ -73,19 +74,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
             selectedListType: proStatus.selectedListType,
             isProForLife: proStatus.isProForLife,
             hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
-          };
           setUser(enhancedUser);
-          setIsUserDataLoaded(true);
         } else {
           console.log('🔍 DEBUG: Initial session found but email not confirmed, setting basic user data');
           // Email not confirmed yet, set basic user data without profile operations
+          setUser(session.user);
           setUser(initialSession.user);
           setIsUserDataLoaded(true);
         }
       } else {
         setUser(null);
-        setIsUserDataLoaded(true);
       }
+      
+      // Set isUserDataLoaded based on whether we have a confirmed user or no user at all
+      setIsUserDataLoaded(!session?.user || !!session.user.email_confirmed_at);
       
       setLoading(false);
 
