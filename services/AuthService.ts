@@ -271,8 +271,9 @@ class AuthServiceClass {
       
       if (selectError) {
         console.error('Error checking existing user profile:', selectError);
-        // If we can't check for existing profile, assume it doesn't exist and try to create
-        console.log('🔍 DEBUG: Could not check existing profile, will attempt to create new one');
+        // If we can't check for existing profile, return null and let app continue
+        console.log('🔍 DEBUG: Could not check existing profile, returning null');
+        return null;
       }
       
       if (existingProfile) {
@@ -298,21 +299,16 @@ class AuthServiceClass {
       
       if (insertError) {
         console.error('Error creating user profile:', insertError);
-        // If profile creation fails due to foreign key constraint, it means the user
-        // record isn't ready yet. Return null and let the app continue.
-        if (insertError.code === '23503') {
-          console.log('🔍 DEBUG: User record not ready yet, will retry later');
-          return null;
-        }
-        throw new Error(insertError.message);
+        // Return null instead of throwing to let app continue
+        console.log('🔍 DEBUG: Profile creation failed, returning null');
+        return null;
       }
       
       console.log('🔍 DEBUG: Successfully created user profile:', newProfile);
       return newProfile;
     } catch (error) {
       console.error('Error ensuring user profile exists:', error);
-      // Return null instead of throwing to allow app to continue
-      console.log('🔍 DEBUG: Profile creation failed, continuing without profile');
+      console.log('🔍 DEBUG: Exception in profile creation, returning null');
       return null;
     }
   }
