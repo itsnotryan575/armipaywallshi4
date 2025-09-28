@@ -79,12 +79,9 @@ export default function SubscriptionSettings() {
     } finally {
       setPurchasing(false);
     }
-  };
-
-  const handleRestorePurchases = async () => {
-    setRestoring(true);
-    try {
-      // User state is now updated automatically by checkProStatus
+      await AuthService.restorePurchases();
+      
+      // Force refresh pro status after successful restore
       await checkProStatus(true);
       
       Alert.alert('Purchases Restored', 'Your previous purchases have been restored successfully.');
