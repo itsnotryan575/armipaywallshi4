@@ -330,6 +330,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const proStatus = await AuthService.checkProStatus(forceRefresh);
       
+      // Always update user state with the latest pro status
       if (user) {
         setUser({
           ...user,
@@ -339,6 +340,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
         });
       }
+      
       return proStatus;
     } catch (error) {
       console.error('Error checking pro status:', error);

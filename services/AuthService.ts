@@ -338,7 +338,7 @@ class AuthServiceClass {
       if (this.revenueCatInitialized) {
         try {
           const customerInfo = await Purchases.getCustomerInfo({
-            fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.NETWORK_ONLY : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
+            fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
           });
           hasRevenueCatEntitlement = 
             customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
@@ -463,6 +463,11 @@ class AuthServiceClass {
     
     try {
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      
+      // Force refresh pro status after successful purchase
+      const updatedProStatus = await this.checkProStatus(true);
+      console.log('Pro status after purchase:', updatedProStatus);
+      
       return customerInfo;
     } catch (error) {
       console.error('Error purchasing package:', error);
@@ -479,9 +484,29 @@ class AuthServiceClass {
     
     try {
       const customerInfo = await Purchases.restorePurchases();
+      
+      // Force refresh pro status after successful restore
+      const updatedProStatus = await this.checkProStatus(true);
+      console.log('Pro status after restore:', updatedProStatus);
+      
       return customerInfo;
     } catch (error) {
       console.error('Error restoring purchases:', error);
+      throw error;
+    }
+  }
+
+  async showManageSubscriptions() {
+    await this.ensureInitialized();
+    
+    if (!this.revenueCatInitialized) {
+      throw new Error('RevenueCat not initialized');
+    }
+    
+    try {
+      await Purchases.showManageSubscriptions();
+    } catch (error) {
+      console.error('Error showing manage subscriptions:', error);
       throw error;
     }
   }

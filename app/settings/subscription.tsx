@@ -80,14 +80,8 @@ export default function SubscriptionSettings() {
       setPurchasing(false);
     }
   };
-
-  const handleRestorePurchases = async () => {
-    setRestoring(true);
-    try {
-      await AuthService.restorePurchases();
-      
-      // Refresh pro status
-      await checkProStatus();
+        // User state is now updated automatically by checkProStatus
+      await checkProStatus(true);
       
       Alert.alert('Purchases Restored', 'Your previous purchases have been restored successfully.');
     } catch (error) {
@@ -267,10 +261,10 @@ export default function SubscriptionSettings() {
         )}
 
         {/* Manage Subscription */}
-        {!user?.isProForLife && user?.isPro && (
+        {user?.isPro && !user?.isProForLife && (
           <View style={styles.manageSubscriptionSection}>
             <TouchableOpacity
-              style={[styles.manageSubscriptionButton, { backgroundColor: theme.accent, borderColor: theme.border }]}
+              style={[styles.manageButton, { backgroundColor: theme.accent, borderColor: theme.border }]}
               onPress={async () => {
                 try {
                   await AuthService.showManageSubscriptions();
@@ -279,10 +273,13 @@ export default function SubscriptionSettings() {
                 }
               }}
             >
-              <Text style={[styles.manageSubscriptionButtonText, { color: theme.text }]}>
+              <Text style={[styles.manageButtonText, { color: theme.text }]}>
                 Manage Subscription
               </Text>
             </TouchableOpacity>
+            <Text style={[styles.manageHelpText, { color: theme.primary }]}>
+              Cancel anytime. You'll keep Pro features until your current period ends.
+            </Text>
           </View>
         )}
 
@@ -526,14 +523,20 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 24,
   },
-  manageSubscriptionButton: {
+  manageButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
+    marginBottom: 8,
   },
-  manageSubscriptionButtonText: {
+  manageButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  manageHelpText: {
+    fontSize: 14,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });
