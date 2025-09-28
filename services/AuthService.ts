@@ -307,7 +307,7 @@ class AuthServiceClass {
     }
   }
 
-  async checkProStatus(): Promise<ProStatus> {
+  async checkProStatus(forceRefresh: boolean = false): Promise<ProStatus> {
     await this.ensureInitialized();
     
     const defaultStatus: ProStatus = {
@@ -337,7 +337,9 @@ class AuthServiceClass {
       let hasRevenueCatEntitlement = false;
       if (this.revenueCatInitialized) {
         try {
-          const customerInfo = await Purchases.getCustomerInfo();
+          const customerInfo = await Purchases.getCustomerInfo({
+            fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.NETWORK_ONLY : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
+          });
           hasRevenueCatEntitlement = 
             customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
             customerInfo.entitlements.active['ARMi_Pro'] !== undefined; // Fallback
