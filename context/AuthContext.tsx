@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService } from '@/services/AuthService';
 import { ArmiList } from '@/types/armi-intents';
+import * as Purchases from "react-native-purchases";
+
 
 interface User {
   id: string;
@@ -175,6 +177,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return () => {
         subscription?.unsubscribe();
       };
+    } catch (error) {
+      console.error('Error initializing auth:', error);
+      setLoading(false);
+      setIsUserDataLoaded(true);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Subscribe once to RC CustomerInfo updates
+    const sub = Purchases.addCustomerInfoUpdateListener(async (_ci) => {
+      try {
+        // Force-refresh our consolidated pro status (RC + "pro for life")
+        const proStatus = await AuthService.checkProStatus(true);
+        if (!isMounted) return;
+
+        setUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            isPro: proStatus.isPro,
+            selectedListType: proStatus.selectedListType,
+            isProForLife: proStatus.isProForLife,
+            hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+          };
+        });
+
+        // Optional: lightweight log for debugging
+        console.log("[RC Listener] isPro:", proStatus.isPro, "hasEntitlement:", proStatus.hasRevenueCatEntitlement);
+      } catch (e) {
+        console.log("[RC Listener] pro refresh failed:", e);
+      }
     } catch (error) {
       console.error('Error initializing auth:', error);
       setLoading(false);
