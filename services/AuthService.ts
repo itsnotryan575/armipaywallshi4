@@ -337,12 +337,16 @@ class AuthServiceClass {
       let hasRevenueCatEntitlement = false;
       if (this.revenueCatInitialized) {
         try {
-          const customerInfo = await Purchases.getCustomerInfo({
-            fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
-          });
-          hasRevenueCatEntitlement = 
-            customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
-            customerInfo.entitlements.active['ARMi_Pro'] !== undefined; // Fallback
+          if (Purchases.FETCH_POLICY) { // Ensure FETCH_POLICY is defined before accessing its properties
+            const customerInfo = await Purchases.getCustomerInfo({
+              fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
+            });
+            hasRevenueCatEntitlement = 
+              customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
+              customerInfo.entitlements.active['ARMi_Pro'] !== undefined; // Fallback
+          } else {
+            console.warn('RevenueCat Purchases.FETCH_POLICY is undefined. Skipping entitlement check.');
+          }
         } catch (revenueCatError) {
           console.error('Failed to check RevenueCat entitlement:', revenueCatError);
         }
