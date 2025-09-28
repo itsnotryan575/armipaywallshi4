@@ -423,6 +423,21 @@ class AuthServiceClass {
     }
   }
 
+  async showManageSubscriptions() {
+    await this.ensureInitialized();
+    
+    if (!this.revenueCatInitialized) {
+      throw new Error('RevenueCat not initialized');
+    }
+    
+    try {
+      await Purchases.showManageSubscriptions();
+    } catch (error) {
+      console.error('Error showing manage subscriptions:', error);
+      throw error;
+    }
+  }
+
   async getOfferings(): Promise<PurchasesOffering[]> {
     await this.ensureInitialized();
     

@@ -266,6 +266,26 @@ export default function SubscriptionSettings() {
           </View>
         )}
 
+        {/* Manage Subscription */}
+        {!user?.isProForLife && user?.isPro && (
+          <View style={styles.manageSubscriptionSection}>
+            <TouchableOpacity
+              style={[styles.manageSubscriptionButton, { backgroundColor: theme.accent, borderColor: theme.border }]}
+              onPress={async () => {
+                try {
+                  await AuthService.showManageSubscriptions();
+                } catch (error) {
+                  Alert.alert('Error', 'Could not open subscription management. Please try again later.');
+                }
+              }}
+            >
+              <Text style={[styles.manageSubscriptionButtonText, { color: theme.text }]}>
+                Manage Subscription
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Current Limits (Free Users) */}
         {!user?.isPro && (
           <View style={[styles.limitsCard, { backgroundColor: theme.cardBackground }]}>
@@ -500,5 +520,20 @@ const styles = StyleSheet.create({
   limitText: {
     fontSize: 16,
     marginLeft: 12,
+  },
+  manageSubscriptionSection: {
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  manageSubscriptionButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  manageSubscriptionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
