@@ -354,7 +354,7 @@ class AuthServiceClass {
             const possibleEntitlementIds = [
               ENTITLEMENT_ID, // 'ARMi Pro'
               'ARMi_Pro',
-              'armi_pro',
+              'default',
               'pro',
               'Pro',
             ];
