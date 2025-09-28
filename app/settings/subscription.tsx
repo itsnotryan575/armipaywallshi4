@@ -59,8 +59,8 @@ export default function SubscriptionSettings() {
     try {
       await AuthService.purchasePackage(packageToPurchase);
       
-      // Refresh pro status
-      await checkProStatus();
+      // Force refresh pro status and update user state
+      await checkProStatus(true);
       
       Alert.alert(
         'Welcome to Pro!',
@@ -86,7 +86,7 @@ export default function SubscriptionSettings() {
     try {
       await AuthService.restorePurchases();
       
-      // Force refresh pro status after successful restore
+      // Force refresh pro status and update user state
       await checkProStatus(true);
       
       Alert.alert('Purchases Restored', 'Your previous purchases have been restored successfully.');
