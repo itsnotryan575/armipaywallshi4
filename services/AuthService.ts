@@ -73,7 +73,7 @@ class AuthServiceClass {
     }
   }
 
-  private async setRevenueCatUserId(userId: string) {
+  async setRevenueCatUserId(userId: string) {
     try {
       if (this.revenueCatInitialized) {
         await Purchases.logIn(userId);
@@ -341,9 +341,33 @@ class AuthServiceClass {
             const customerInfo = await Purchases.getCustomerInfo({
               fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
             });
-            hasRevenueCatEntitlement = 
-              customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined ||
-              customerInfo.entitlements.active['ARMi_Pro'] !== undefined; // Fallback
+            
+            // Log detailed entitlement info for debugging
+            console.log('RevenueCat Customer Info:', {
+              originalAppUserId: customerInfo.originalAppUserId,
+              activeEntitlements: Object.keys(customerInfo.entitlements.active),
+              allEntitlements: Object.keys(customerInfo.entitlements.all),
+              entitlementId: ENTITLEMENT_ID,
+            });
+            
+            // Check for entitlement with multiple possible IDs
+            const possibleEntitlementIds = [
+              ENTITLEMENT_ID, // 'ARMi Pro'
+              'ARMi_Pro',
+              'armi_pro',
+              'pro',
+              'Pro',
+            ];
+            
+            hasRevenueCatEntitlement = possibleEntitlementIds.some(id => 
+              customerInfo.entitlements.active[id] !== undefined
+            );
+            
+            console.log('RevenueCat entitlement check result:', {
+              hasRevenueCatEntitlement,
+              checkedIds: possibleEntitlementIds,
+              foundActiveEntitlements: Object.keys(customerInfo.entitlements.active),
+            });
           } else {
             console.warn('RevenueCat FETCH_POLICY not fully initialized. Skipping entitlement check for this call.');
           }
@@ -353,6 +377,13 @@ class AuthServiceClass {
       }
       
       const isPro = isProForLife || hasRevenueCatEntitlement;
+      
+      console.log('Final pro status calculation:', {
+        isPro,
+        isProForLife,
+        hasRevenueCatEntitlement,
+        selectedListType,
+      });
       
       return {
         isPro,
@@ -466,11 +497,20 @@ class AuthServiceClass {
     }
     
     try {
+      // Ensure RevenueCat user ID is set before purchase
+      const session = await this.getSession();
+      if (session?.user?.id) {
+        await this.setRevenueCatUserId(session.user.id);
+      }
+      
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       
-      // Force refresh pro status after successful purchase
-      const updatedProStatus = await this.checkProStatus(true);
-      console.log('Pro status after purchase:', updatedProStatus);
+      // Log the purchase result for debugging
+      console.log('Purchase successful! Customer info:', {
+        originalAppUserId: customerInfo.originalAppUserId,
+        activeEntitlements: Object.keys(customerInfo.entitlements.active),
+        allEntitlements: Object.keys(customerInfo.entitlements.all),
+      });
       
       return customerInfo;
     } catch (error) {
@@ -487,11 +527,20 @@ class AuthServiceClass {
     }
     
     try {
+      // Ensure RevenueCat user ID is set before restore
+      const session = await this.getSession();
+      if (session?.user?.id) {
+        await this.setRevenueCatUserId(session.user.id);
+      }
+      
       const customerInfo = await Purchases.restorePurchases();
       
-      // Force refresh pro status after successful restore
-      const updatedProStatus = await this.checkProStatus(true);
-      console.log('Pro status after restore:', updatedProStatus);
+      // Log the restore result for debugging
+      console.log('Restore successful! Customer info:', {
+        originalAppUserId: customerInfo.originalAppUserId,
+        activeEntitlements: Object.keys(customerInfo.entitlements.active),
+        allEntitlements: Object.keys(customerInfo.entitlements.all),
+      });
       
       return customerInfo;
     } catch (error) {
