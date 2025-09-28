@@ -79,6 +79,11 @@ export default function SubscriptionSettings() {
     } finally {
       setPurchasing(false);
     }
+  };
+
+  const handleRestorePurchases = async () => {
+    setRestoring(true);
+    try {
       await AuthService.restorePurchases();
       
       // Force refresh pro status after successful restore
