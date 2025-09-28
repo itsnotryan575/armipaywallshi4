@@ -27,7 +27,7 @@ interface AuthContextType {
   updatePassword: (newPassword: string) => Promise<void>;
   updateEmail: (newEmail: string) => Promise<void>;
   updateSelectedListType: (listType: ArmiList) => Promise<void>;
-  checkProStatus: () => Promise<void>;
+  checkProStatus: (forceRefresh?: boolean) => Promise<ProStatus>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
           
           // Check pro status and update user object
-          const proStatus = await AuthService.checkProStatus();
+          const proStatus = await AuthService.checkProStatus(true); // Force refresh on initial load
           console.log('🔍 DEBUG: AuthContext - Pro status check result:', proStatus);
           const enhancedUser = {
             ...initialSession.user,
@@ -130,8 +130,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 // Continue without throwing - app should still work
               }
               
-              // Check pro status and update user object
-              const proStatus = await AuthService.checkProStatus();
+              // Check pro status and update user object, force refresh
+              const proStatus = await AuthService.checkProStatus(true);
               console.log('🔍 DEBUG: AuthContext - Auth state change pro status:', proStatus);
               const enhancedUser = {
                 ...session.user,
@@ -198,6 +198,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     try {
       const result = await AuthService.signIn(email, password);
+      
+      // Set RevenueCat user ID after successful sign in
+      if (result.user?.id && result.session) { // Ensure session is also present
+        await AuthService.setRevenueCatUserId(result.user.id);
+      }
+      
+      // Force refresh pro status after sign-in
+      const proStatus = await checkProStatus(true);
+      if (user) { // Update user state if it exists
+        setUser({
+          ...user,
+          isPro: proStatus.isPro,
+          selectedListType: proStatus.selectedListType,
+          isProForLife: proStatus.isProForLife,
+          hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+        });
+      }
+
       return result;
     } catch (error) {
       throw error;
@@ -220,7 +238,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const result = await AuthService.verifyEmailOtp(email, token);
       
       // Force refresh the current session to get updated user data
-      const refreshedSession = await AuthService.getSession();
+      const refreshedSession = await AuthService.getSession(); // This should already be updated by Supabase
       
       if (refreshedSession?.user) {
         console.log('🔍 DEBUG: Email verified and session refreshed - ensuring user profile exists');
@@ -234,7 +252,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         // Check pro status and update user object
-        const proStatus = await AuthService.checkProStatus();
+        const proStatus = await AuthService.checkProStatus(true); // Force refresh after verification
         const enhancedUser = {
           ...refreshedSession.user,
           isPro: proStatus.isPro,
@@ -308,9 +326,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const checkProStatus = async () => {
+  const checkProStatus = async (forceRefresh: boolean = false): Promise<ProStatus> => {
     try {
-      const proStatus = await AuthService.checkProStatus();
+      const proStatus = await AuthService.checkProStatus(forceRefresh);
       
       if (user) {
         setUser({
@@ -321,8 +339,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
         });
       }
+      return proStatus;
     } catch (error) {
       console.error('Error checking pro status:', error);
+      throw error; // Re-throw to indicate failure
     }
   };
 
