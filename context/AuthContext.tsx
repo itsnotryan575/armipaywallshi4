@@ -206,18 +206,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         // Optional: lightweight log for debugging
-        console.log("[RC Listener] isPro:", proStatus.isPro, "hasEntitlement:", proStatus.hasRevenueCatEntitlement);
+        console.log(
+          "[RC Listener] isPro:",
+          proStatus.isPro,
+          "hasEntitlement:",
+          proStatus.hasRevenueCatEntitlement
+        );
       } catch (e) {
         console.log("[RC Listener] pro refresh failed:", e);
       }
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-      setLoading(false);
-      setIsUserDataLoaded(true);
-    }
-    )
-  };
-  )
+    });
+
+    return () => {
+      // Older SDKs return void; newer return a subscription with remove()
+      // @ts-ignore
+      if (sub?.remove) sub.remove();
+      isMounted = false;
+    };
+  }, []);
 
   const signUp = async (email: string, password: string) => {
     setLoading(true);
