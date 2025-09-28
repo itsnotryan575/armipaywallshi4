@@ -187,40 +187,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let isMounted = true;
 
-    // Subscribe once to RC CustomerInfo updates
-    const sub = Purchases.addCustomerInfoUpdateListener(async (_ci) => {
+    // Subscribe to RC CustomerInfo updates with defensive checks
+    const setupRevenueCatListener = async () => {
       try {
-        // Force-refresh our consolidated pro status (RC + "pro for life")
-        const proStatus = await AuthService.checkProStatus(true);
-        if (!isMounted) return;
+        // Wait a bit for RevenueCat to be fully initialized
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if the method exists before calling it
+        if (typeof Purchases.addCustomerInfoUpdateListener !== 'function') {
+          console.log('[RC Listener] addCustomerInfoUpdateListener not available, skipping listener setup');
+          return null;
+        }
+        
+        console.log('[RC Listener] Setting up CustomerInfo update listener');
+        
+        const sub = Purchases.addCustomerInfoUpdateListener(async (_ci) => {
+          try {
+            // Force-refresh our consolidated pro status (RC + "pro for life")
+            const proStatus = await AuthService.checkProStatus(true);
+            if (!isMounted) return;
 
-        setUser((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            isPro: proStatus.isPro,
-            selectedListType: proStatus.selectedListType,
-            isProForLife: proStatus.isProForLife,
-            hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
-          };
+            setUser((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                isPro: proStatus.isPro,
+                selectedListType: proStatus.selectedListType,
+                isProForLife: proStatus.isProForLife,
+                hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+              };
+            });
+
+            // Optional: lightweight log for debugging
+            console.log(
+              "[RC Listener] isPro:",
+              proStatus.isPro,
+              "hasEntitlement:",
+              proStatus.hasRevenueCatEntitlement
+            );
+          } catch (e) {
+            console.log("[RC Listener] pro refresh failed:", e);
+          }
         });
-
-        // Optional: lightweight log for debugging
-        console.log(
-          "[RC Listener] isPro:",
-          proStatus.isPro,
-          "hasEntitlement:",
-          proStatus.hasRevenueCatEntitlement
-        );
-      } catch (e) {
-        console.log("[RC Listener] pro refresh failed:", e);
+        
+        return sub;
+      } catch (error) {
+        console.log('[RC Listener] Failed to setup listener:', error);
+        return null;
       }
+    };
+    
+    let subscription: any = null;
+    setupRevenueCatListener().then(sub => {
+      subscription = sub;
     });
 
     return () => {
-      // Older SDKs return void; newer return a subscription with remove()
-      // @ts-ignore
-      if (sub?.remove) sub.remove();
+      // Cleanup listener if it was created
+      if (subscription) {
+        try {
+          // Older SDKs return void; newer return a subscription with remove()
+          // @ts-ignore
+          if (subscription.remove) {
+            subscription.remove();
+          }
+        } catch (error) {
+          console.log('[RC Listener] Error removing listener:', error);
+        }
+      }
       isMounted = false;
     };
   }, []);
