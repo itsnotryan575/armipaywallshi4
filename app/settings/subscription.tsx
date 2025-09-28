@@ -84,8 +84,6 @@ export default function SubscriptionSettings() {
   const handleRestorePurchases = async () => {
     setRestoring(true);
     try {
-      await AuthService.restorePurchases();
-      
       // User state is now updated automatically by checkProStatus
       await checkProStatus(true);
       
@@ -534,7 +532,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   manageButtonText: {
     fontSize: 16,
@@ -543,6 +541,5 @@ const styles = StyleSheet.create({
   manageHelpText: {
     fontSize: 14,
     textAlign: 'center',
-    paddingHorizontal: 20,
   },
 });
