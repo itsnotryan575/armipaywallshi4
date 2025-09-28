@@ -215,7 +215,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
       setIsUserDataLoaded(true);
     }
+    )
   };
+  )
 
   const signUp = async (email: string, password: string) => {
     setLoading(true);
