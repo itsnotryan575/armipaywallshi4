@@ -187,23 +187,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     let isMounted = true;
 
-    // Subscribe to RC CustomerInfo updates with defensive checks
+    // Subscribe to RC CustomerInfo updates if available
     const setupRevenueCatListener = async () => {
       try {
-        // Wait a bit for RevenueCat to be fully initialized
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check if the method exists before calling it
         if (typeof Purchases.addCustomerInfoUpdateListener !== 'function') {
-          console.log('[RC Listener] addCustomerInfoUpdateListener not available, skipping listener setup');
+          console.log('[RC Listener] addCustomerInfoUpdateListener not available');
           return null;
         }
         
-        console.log('[RC Listener] Setting up CustomerInfo update listener');
-        
-        const sub = Purchases.addCustomerInfoUpdateListener(async (_ci) => {
+        const sub = Purchases.addCustomerInfoUpdateListener(async () => {
+          const ci = await (async () => { 
+            try { 
+              await Purchases.invalidateCustomerInfoCache(); 
+              return await Purchases.getCustomerInfo(); 
+            } catch { 
+              return null; 
+            } 
+          })();
+          
+          if (!ci) return;
+          
           try {
-            // Force-refresh our consolidated pro status (RC + "pro for life")
+            // Check entitlement directly and update consolidated pro status
+            const hasEntitlement = !!ci?.entitlements?.active?.["ARMi Pro"];
             const proStatus = await AuthService.checkProStatus(true);
             if (!isMounted) return;
 
@@ -214,16 +220,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 isPro: proStatus.isPro,
                 selectedListType: proStatus.selectedListType,
                 isProForLife: proStatus.isProForLife,
-                hasRevenueCatEntitlement: proStatus.hasRevenueCatEntitlement,
+                hasRevenueCatEntitlement: hasEntitlement,
               };
             });
 
-            // Optional: lightweight log for debugging
             console.log(
               "[RC Listener] isPro:",
               proStatus.isPro,
               "hasEntitlement:",
-              proStatus.hasRevenueCatEntitlement
+              hasEntitlement
             );
           } catch (e) {
             console.log("[RC Listener] pro refresh failed:", e);
@@ -243,12 +248,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     return () => {
-      // Cleanup listener if it was created
       if (subscription) {
         try {
-          // Older SDKs return void; newer return a subscription with remove()
-          // @ts-ignore
-          if (subscription.remove) {
+          if (subscription?.remove) {
             subscription.remove();
           }
         } catch (error) {
