@@ -261,11 +261,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch (error) {
           console.log('[RC Listener] Error removing listener:', error);
         }
-            subscription.remove();
-          }
-        } catch (error) {
-          console.log('[RC Listener] Error removing listener:', error);
-        }
       }
       isMounted = false;
     };
