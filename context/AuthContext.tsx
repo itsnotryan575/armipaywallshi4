@@ -3,12 +3,6 @@ import { AuthService } from '@/services/AuthService';
 import { ArmiList } from '@/types/armi-intents';
 import * as Purchases from "react-native-purchases";
 
-interface ProStatus {
-  isPro: boolean;
-  selectedListType: ArmiList | null;
-  isProForLife: boolean;
-  hasRevenueCatEntitlement: boolean;
-}
 
 interface User {
   id: string;
@@ -366,7 +360,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Clean up RevenueCat identity on sign out
       try {
         await Purchases.logOut();
-        await Purchases.invalidateCustomerInfoCache();
         await Purchases.invalidateCustomerInfoCache();
       } catch (rcError) {
         console.error('Failed to clean up RevenueCat on sign out:', rcError);
