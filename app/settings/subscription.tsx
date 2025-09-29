@@ -114,18 +114,8 @@ export default function SubscriptionSettings() {
 
   const getPackagePeriod = (pkg: PurchasesPackage) => {
     const identifier = pkg.identifier.toLowerCase();
-    if (identifier.includes('yearly') || identifier.includes('annual') || identifier.includes('year')) return 'year';
-    if (identifier.includes('monthly') || identifier.includes('month')) return 'month';
-    
-    // Check product title and description as fallback
-    const title = pkg.product.title?.toLowerCase() || '';
-    const description = pkg.product.description?.toLowerCase() || '';
-    if (title.includes('yearly') || title.includes('annual') || title.includes('year') || 
-        description.includes('yearly') || description.includes('annual') || description.includes('year')) {
-      return 'year';
-    }
-    
-    // If we have multiple packages, assume second one is yearly
+    if (identifier.includes('monthly')) return 'month';
+    if (identifier.includes('yearly')) return 'year';
     return 'month';
   };
 
