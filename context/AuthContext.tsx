@@ -3,6 +3,12 @@ import { AuthService } from '@/services/AuthService';
 import { ArmiList } from '@/types/armi-intents';
 import * as Purchases from "react-native-purchases";
 
+interface ProStatus {
+  isPro: boolean;
+  selectedListType: ArmiList | null;
+  isProForLife: boolean;
+  hasRevenueCatEntitlement: boolean;
+}
 
 interface User {
   id: string;
@@ -358,6 +364,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     try {
       // Clean up RevenueCat identity on sign out
+      try {
         await Purchases.logOut();
         await Purchases.invalidateCustomerInfoCache();
         await Purchases.invalidateCustomerInfoCache();
