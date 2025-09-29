@@ -63,7 +63,7 @@ export async function setProfileList(args: { profileId?: string; profileName?: s
   
   try {
     // Check if user has access to this list type
-    const proStatus = await AuthService.checkProStatus();
+    const proStatus = await AuthService.checkProStatus(true);
     if (!proStatus.isPro && args.listType !== proStatus.selectedListType) {
       throw new Error('LIST_ACCESS_RESTRICTED');
     }

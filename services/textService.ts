@@ -7,7 +7,7 @@ export async function scheduleText(args: { profileName?: string; profileId?: str
   
   try {
     // Check pro status and monthly limits
-    const proStatus = await AuthService.checkProStatus();
+    const proStatus = await AuthService.checkProStatus(true);
     if (!proStatus.isPro) {
       const monthlyCount = await DatabaseService.getMonthlyScheduledTextCount();
       if (monthlyCount >= 5) {

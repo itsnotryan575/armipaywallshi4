@@ -337,9 +337,7 @@ class AuthServiceClass {
       let hasRevenueCatEntitlement = false;
       if (this.revenueCatInitialized) {
         try {
-          if (forceRefresh) {
-            await Purchases.invalidateCustomerInfoCache();
-          }
+          await Purchases.invalidateCustomerInfoCache();
           const customerInfo = await Purchases.getCustomerInfo();
             
             
