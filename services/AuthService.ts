@@ -341,6 +341,7 @@ class AuthServiceClass {
             fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
           });
             
+            
             // Log detailed entitlement info for debugging
             console.log('RevenueCat Customer Info:', {
               originalAppUserId: customerInfo.originalAppUserId,
@@ -353,7 +354,7 @@ class AuthServiceClass {
             const possibleEntitlementIds = [
               ENTITLEMENT_ID, // 'ARMi Pro'
               'ARMi_Pro',
-              'default',
+              'armi_pro',
               'pro',
               'Pro',
             ];
