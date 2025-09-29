@@ -355,6 +355,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     setLoading(true);
     try {
+      // Clean up RevenueCat identity on sign out
+      try {
+        await Purchases.logOut();
+        await Purchases.invalidateCustomerInfoCache();
+      } catch (rcError) {
+        console.error('Failed to clean up RevenueCat on sign out:', rcError);
+      }
+      
       await AuthService.signOut();
     } catch (error) {
       throw error;

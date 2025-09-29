@@ -57,6 +57,11 @@ export default function SubscriptionSettings() {
   const handlePurchase = async (packageToPurchase: PurchasesPackage) => {
     setPurchasing(true);
     try {
+      // Pin RC identity to the current app user BEFORE purchase/restore
+      await AuthService.setRevenueCatUserId(user?.id || '');
+      await Purchases.invalidateCustomerInfoCache();
+      await Purchases.getCustomerInfo({ fetchPolicy: Purchases.FETCH_POLICY.FETCH_CURRENT });
+      
       await AuthService.purchasePackage(packageToPurchase);
       
       // Force refresh pro status and update user state
@@ -84,6 +89,11 @@ export default function SubscriptionSettings() {
   const handleRestorePurchases = async () => {
     setRestoring(true);
     try {
+      // Pin RC identity to the current app user BEFORE purchase/restore
+      await AuthService.setRevenueCatUserId(user?.id || '');
+      await Purchases.invalidateCustomerInfoCache();
+      await Purchases.getCustomerInfo({ fetchPolicy: Purchases.FETCH_POLICY.FETCH_CURRENT });
+      
       await AuthService.restorePurchases();
       
       // Force refresh pro status and update user state
