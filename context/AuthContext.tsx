@@ -358,8 +358,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     try {
       // Clean up RevenueCat identity on sign out
-      try {
         await Purchases.logOut();
+        await Purchases.invalidateCustomerInfoCache();
         await Purchases.invalidateCustomerInfoCache();
       } catch (rcError) {
         console.error('Failed to clean up RevenueCat on sign out:', rcError);
