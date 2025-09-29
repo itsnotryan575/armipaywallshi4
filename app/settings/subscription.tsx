@@ -59,8 +59,7 @@ export default function SubscriptionSettings() {
     try {
       // Pin RC identity to the current app user BEFORE purchase/restore
       await AuthService.setRevenueCatUserId(user?.id || '');
-      await Purchases.invalidateCustomerInfoCache();
-      await Purchases.getCustomerInfo();
+      await Purchases.getCustomerInfo({ fetchPolicy: Purchases.FETCH_POLICY.FETCH_CURRENT });
       
       await AuthService.purchasePackage(packageToPurchase);
       
@@ -91,8 +90,7 @@ export default function SubscriptionSettings() {
     try {
       // Pin RC identity to the current app user BEFORE purchase/restore
       await AuthService.setRevenueCatUserId(user?.id || '');
-      await Purchases.invalidateCustomerInfoCache();
-      await Purchases.getCustomerInfo();
+      await Purchases.getCustomerInfo({ fetchPolicy: Purchases.FETCH_POLICY.FETCH_CURRENT });
       
       await AuthService.restorePurchases();
       

@@ -337,11 +337,9 @@ class AuthServiceClass {
       let hasRevenueCatEntitlement = false;
       if (this.revenueCatInitialized) {
         try {
-          if (Purchases.FETCH_POLICY && Purchases.FETCH_POLICY.FETCH_CURRENT && Purchases.FETCH_POLICY.CACHED_OR_NETWORK) {
-            if (forceRefresh) {
-              await Purchases.invalidateCustomerInfoCache();
-            }
-            const customerInfo = await Purchases.getCustomerInfo();
+          const customerInfo = await Purchases.getCustomerInfo({
+            fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
+          });
             
             // Log detailed entitlement info for debugging
             console.log('RevenueCat Customer Info:', {
@@ -369,9 +367,6 @@ class AuthServiceClass {
               checkedIds: possibleEntitlementIds,
               foundActiveEntitlements: Object.keys(customerInfo.entitlements.active),
             });
-          } else {
-            console.warn('RevenueCat FETCH_POLICY not fully initialized. Skipping entitlement check for this call.');
-          }
         } catch (revenueCatError) {
           console.error('Failed to check RevenueCat entitlement:', revenueCatError);
         }
