@@ -3,18 +3,19 @@ import { AuthService } from '@/services/AuthService';
 import { ArmiList } from '@/types/armi-intents';
 import * as Purchases from "react-native-purchases";
 
-interface ProStatus {
-  isPro: boolean;
-  selectedListType: ArmiList | null;
-  isProForLife: boolean;
-  hasRevenueCatEntitlement: boolean;
-}
 
 interface User {
   id: string;
   email: string;
   email_confirmed_at?: string;
   created_at: string;
+  isPro: boolean;
+  selectedListType: ArmiList | null;
+  isProForLife: boolean;
+  hasRevenueCatEntitlement: boolean;
+}
+
+interface ProStatus {
   isPro: boolean;
   selectedListType: ArmiList | null;
   isProForLife: boolean;
