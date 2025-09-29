@@ -483,14 +483,6 @@ class DatabaseServiceClass {
       return mockId;
     }
     
-    // Check profile limit for new profiles (not updates)
-    if (!profileData.id) {
-      const currentCount = await this.getProfileCount();
-      if (currentCount >= 5) {
-        throw new Error('PROFILE_LIMIT_REACHED');
-      }
-    }
-    
     const {
       id,
       name,
@@ -647,12 +639,6 @@ class DatabaseServiceClass {
       return Math.floor(Math.random() * 1000) + 1;
     }
     
-    // Check monthly reminder limit
-    const monthlyCount = await this.getMonthlyReminderCount();
-    if (monthlyCount >= 5) {
-      throw new Error('MONTHLY_REMINDER_LIMIT_REACHED');
-    }
-    
     const { profileId, title, description, type = 'general', scheduledFor } = reminderData;
     // Convert Date object to ISO string for database storage
     const scheduledForISO = scheduledFor instanceof Date ? scheduledFor.toISOString() : scheduledFor;
@@ -788,12 +774,6 @@ class DatabaseServiceClass {
     if (this.isWebFallback) {
       console.log('Web fallback: Scheduled text operation simulated');
       return Math.floor(Math.random() * 1000) + 1;
-    }
-    
-    // Check monthly scheduled text limit
-    const monthlyCount = await this.getMonthlyScheduledTextCount();
-    if (monthlyCount >= 5) {
-      throw new Error('MONTHLY_TEXT_LIMIT_REACHED');
     }
     
     const { profileId, phoneNumber, message, scheduledFor } = textData;
