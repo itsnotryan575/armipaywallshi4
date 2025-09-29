@@ -338,9 +338,10 @@ class AuthServiceClass {
       if (this.revenueCatInitialized) {
         try {
           if (Purchases.FETCH_POLICY && Purchases.FETCH_POLICY.FETCH_CURRENT && Purchases.FETCH_POLICY.CACHED_OR_NETWORK) {
-            const customerInfo = await Purchases.getCustomerInfo({
-              fetchPolicy: forceRefresh ? Purchases.FETCH_POLICY.FETCH_CURRENT : Purchases.FETCH_POLICY.CACHED_OR_NETWORK,
-            });
+            if (forceRefresh) {
+              await Purchases.invalidateCustomerInfoCache();
+            }
+            const customerInfo = await Purchases.getCustomerInfo();
             
             // Log detailed entitlement info for debugging
             console.log('RevenueCat Customer Info:', {
