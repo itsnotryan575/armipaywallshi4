@@ -195,6 +195,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return null;
         }
         
+        if (typeof Purchases.addCustomerInfoUpdateListener !== 'function') {
+          console.log('[RC Listener] addCustomerInfoUpdateListener not available');
+          return null;
+        }
+        
         const sub = Purchases.addCustomerInfoUpdateListener(async () => {
           const ci = await (async () => { 
             try { 
@@ -251,6 +256,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (subscription) {
         try {
           if (subscription?.remove) {
+            subscription.remove();
+          }
             subscription.remove();
           }
         } catch (error) {
