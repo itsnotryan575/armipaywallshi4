@@ -15,13 +15,6 @@ interface User {
   hasRevenueCatEntitlement: boolean;
 }
 
-interface ProStatus {
-  isPro: boolean;
-  selectedListType: ArmiList | null;
-  isProForLife: boolean;
-  hasRevenueCatEntitlement: boolean;
-}
-
 interface AuthContextType {
   user: User | null;
   session: any;
