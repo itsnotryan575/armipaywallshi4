@@ -114,9 +114,11 @@ export default function SubscriptionSettings() {
 
   const getPackagePeriod = (pkg: PurchasesPackage) => {
     const identifier = pkg.identifier.toLowerCase();
-    if (identifier.includes('monthly')) return 'month';
-    if (identifier.includes('yearly')) return 'year';
-    return 'month';
+    if (identifier.includes('yearly') || identifier.includes('annual') || identifier.includes('year')) return 'year';
+    if (identifier.includes('monthly') || identifier.includes('month')) return 'month';
+    // Fallback: assume second package (index 1) is yearly, first is monthly
+    const packageIndex = offerings.findIndex(p => p.identifier === pkg.identifier);
+    return packageIndex === 1 ? 'year' : 'month';
   };
 
   const proFeatures = [
